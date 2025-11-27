@@ -96,7 +96,7 @@ main() {
     log_info "Validating service endpoints..."
     
     # Test Consul
-    if curl -sf http://localhost:8500/v1/status/leader > /dev/null; then
+    if curl -sf --max-time 10 http://localhost:8500/v1/status/leader > /dev/null; then
         log_info "Consul API is responding"
     else
         log_error "Consul API is not responding"
@@ -104,7 +104,7 @@ main() {
     fi
     
     # Test OpenSearch
-    if curl -sf http://localhost:9200/_cluster/health > /dev/null; then
+    if curl -sf --max-time 10 http://localhost:9200/_cluster/health > /dev/null; then
         log_info "OpenSearch API is responding"
     else
         log_error "OpenSearch API is not responding"
@@ -112,7 +112,7 @@ main() {
     fi
     
     # Test MinIO
-    if curl -sf http://localhost:9000/minio/health/live > /dev/null; then
+    if curl -sf --max-time 10 http://localhost:9000/minio/health/live > /dev/null; then
         log_info "MinIO API is responding"
     else
         log_error "MinIO API is not responding"
@@ -120,7 +120,7 @@ main() {
     fi
     
     # Test Apicurio Registry
-    if curl -sf http://localhost:8081/health > /dev/null || curl -sf http://localhost:8081/q/health > /dev/null; then
+    if curl -sf --max-time 10 http://localhost:8081/health > /dev/null || curl -sf --max-time 10 http://localhost:8081/q/health > /dev/null; then
         log_info "Apicurio Registry API is responding"
     else
         log_error "Apicurio Registry API is not responding"
@@ -128,7 +128,7 @@ main() {
     fi
     
     # Test Grafana LGTM
-    if curl -sf http://localhost:3001/api/health > /dev/null; then
+    if curl -sf --max-time 10 http://localhost:3001/api/health > /dev/null; then
         log_info "Grafana LGTM is responding"
     else
         log_warn "Grafana LGTM may still be starting up"

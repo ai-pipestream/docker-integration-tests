@@ -113,6 +113,7 @@ services:
       - pipeline-test-network
     ports:
       - "8081:8080"
+    restart: on-failure:3
     environment:
       # Apicurio Registry storage configuration
       APICURIO_STORAGE_KIND: 'sql'
