@@ -16,7 +16,7 @@ The following services are included in the deployment:
 |---------|-------|---------|-------------|
 | Consul | `hashicorp/consul:1.20.1` | 8500, 8600 | Service discovery and configuration |
 | MySQL | `mysql:8.0.40` | 3306 | Relational database |
-| Kafka | `apache/kafka:3.9.0` | 9094 | Event streaming platform (KRaft mode) |
+| Kafka | `apache/kafka:4.1.1` | 9094 | Event streaming platform (KRaft mode) |
 | Apicurio Registry | `apicurio/apicurio-registry:3.0.13` | 8081 | Schema registry |
 | Apicurio Registry UI | `apicurio/apicurio-registry-ui:3.0.13` | 8888 | Schema registry web UI |
 | OpenSearch | `opensearchproject/opensearch:3.1.0` | 9200, 9600 | Search and analytics engine |
@@ -53,18 +53,73 @@ docker compose down -v
 
 ## Running Integration Tests
 
-Execute the test script to validate all services:
+### Infrastructure Testing
+
+Execute the infrastructure test script to validate all infrastructure services:
 
 ```bash
-./test-deployment.sh
+./test-infrastructure.sh
 ```
 
 This script will:
-1. Start all services
+1. Start all infrastructure services
 2. Wait for health checks to pass
 3. Validate service endpoints
 4. Print a summary
 5. Clean up containers
+
+### Service Testing
+
+Test individual services with snapshot or release images:
+
+#### Snapshot Testing (GHCR)
+
+Test SNAPSHOT images from GitHub Container Registry:
+
+```bash
+# Test latest snapshot
+./test-snapshot.sh
+
+# Test specific snapshot by SHA
+./test-snapshot.sh abc1234
+
+# Test branch-specific snapshot
+./test-snapshot.sh main-abc1234
+```
+
+#### Release Testing (docker.io)
+
+Test RELEASE images from Docker Hub:
+
+```bash
+# Test latest release
+./test-release.sh
+
+# Test specific version
+./test-release.sh 0.2.11
+```
+
+These scripts will:
+1. Start infrastructure services
+2. Start the service container (snapshot or release)
+3. Wait for all services to be healthy
+4. Run service-specific validation tests
+5. Print a summary with service endpoints
+
+### Service-Specific Tests
+
+Each service has its own test script in `services/<service-name>/test.sh`:
+
+```bash
+cd services/platform-registration-service
+./test.sh
+```
+
+This validates:
+- Health endpoints (liveness, readiness, startup)
+- gRPC reflection (if grpcurl is installed)
+- Metrics endpoint
+- Service-specific functionality
 
 ## Service Access
 
@@ -99,11 +154,39 @@ All services are connected to the `pipeline-test-network` bridge network.
 
 ## Version Policy
 
-All container images use specific version tags to ensure reproducible deployments:
+### Infrastructure Services
+
+All infrastructure container images use specific version tags to ensure reproducible deployments:
 
 - ❌ No `:latest` tags
 - ❌ No SNAPSHOT versions
 - ✅ Explicit semantic versions or release tags
+
+### Application Services
+
+Application services (e.g., `platform-registration-service`) support both:
+
+- **SNAPSHOT Images**: Tested from GHCR (`ghcr.io/ai-pipestream/<service>:<sha>`)
+- **RELEASE Images**: Tested from Docker Hub (`docker.io/pipestreamai/<service>:<version>`)
+
+Use `test-snapshot.sh` for development/testing with snapshots.  
+Use `test-release.sh` for production validation with releases.
+
+## Service Structure
+
+Services are organized in the `services/` directory:
+
+```
+services/
+└── platform-registration-service/
+    ├── docker-compose.yml           # Base service configuration
+    ├── docker-compose.snapshot.yml  # Override for GHCR snapshots
+    ├── docker-compose.release.yml   # Override for docker.io releases
+    ├── test.sh                      # Service-specific validation tests
+    └── ENVIRONMENT_VARIABLES.md     # Complete environment variable reference
+```
+
+See [services/platform-registration-service/ENVIRONMENT_VARIABLES.md](services/platform-registration-service/ENVIRONMENT_VARIABLES.md) for detailed documentation.
 
 ## License
 

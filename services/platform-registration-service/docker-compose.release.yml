@@ -1,0 +1,14 @@
+# Platform Registration Service - Release Override
+# Use this override when testing RELEASE images from docker.io
+#
+# Usage:
+#   VERSION=0.2.11 docker compose -f ../docker-compose.yml -f docker-compose.yml -f docker-compose.release.yml up
+#
+# Or set VERSION environment variable:
+#   export VERSION=0.2.11
+#   docker compose -f ../docker-compose.yml -f docker-compose.yml -f docker-compose.release.yml up
+
+services:
+  platform-registration-service:
+    image: docker.io/pipestreamai/platform-registration-service:${VERSION:-latest}
+

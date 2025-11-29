@@ -1,0 +1,92 @@
+# Platform Registration Service - Base Configuration
+# This file defines the service container with environment variables
+# Use with docker-compose.snapshot.yml or docker-compose.release.yml to set the image source
+
+services:
+  platform-registration-service:
+    container_name: platform-registration-service
+    image: ${PLATFORM_REGISTRATION_IMAGE:-ghcr.io/ai-pipestream/platform-registration-service:latest}
+    networks:
+      - pipeline-test-network
+    ports:
+      - "38101:38101"  # HTTP and gRPC (shared port, gRPC uses same port as HTTP)
+    environment:
+      # ===================================================================
+      # Infrastructure Connection (Docker Network Service Names)
+      # ===================================================================
+      # Consul Service Discovery
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      PIPELINE_CONSUL_ENABLED: "true"
+      
+      # MySQL Database
+      QUARKUS_DATASOURCE_DB_KIND: mysql
+      QUARKUS_DATASOURCE_USERNAME: pipeline
+      QUARKUS_DATASOURCE_PASSWORD: password
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:mysql://mysql:3306/pipeline?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&autoReconnect=true&connectTimeout=5000&socketTimeout=10000
+      QUARKUS_DATASOURCE_REACTIVE_URL: mysql://mysql:3306/pipeline
+      
+      # Kafka (using internal container-to-container listener)
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS_PLAINTEXT: kafka:9092
+      
+      # Apicurio Registry (internal container-to-container URL)
+      APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v3
+      
+      # ===================================================================
+      # HTTP and gRPC Configuration
+      # ===================================================================
+      QUARKUS_HTTP_HOST: 0.0.0.0
+      QUARKUS_HTTP_PORT: 38101
+      QUARKUS_HTTP_ROOT_PATH: /platform-registration
+      QUARKUS_GRPC_SERVER_USE_SEPARATE_SERVER: "false"  # gRPC uses same port as HTTP
+      QUARKUS_GRPC_SERVER_ENABLE_REFLECTION_SERVICE: "true"
+      QUARKUS_GRPC_SERVER_ENABLE_HEALTH_SERVICE: "true"
+      
+      # ===================================================================
+      # Service Registration Configuration
+      # ===================================================================
+      SERVICE_REGISTRATION_ENABLED: "true"
+      SERVICE_REGISTRATION_SERVICE_NAME: platform-registration-service
+      SERVICE_REGISTRATION_DESCRIPTION: Platform service registration and discovery service
+      SERVICE_REGISTRATION_SERVICE_TYPE: APPLICATION
+      PLATFORM_REGISTRATION_HOST: platform-registration-service  # Container hostname
+      SERVICE_REGISTRATION_PORT: 38101
+      SERVICE_REGISTRATION_CAPABILITIES: platform-registration,service-discovery
+      SERVICE_REGISTRATION_TAGS: grpc,core-service,registration
+      
+      # ===================================================================
+      # Application Configuration
+      # ===================================================================
+      QUARKUS_APPLICATION_NAME: platform-registration-service
+      QUARKUS_LOG_LEVEL: INFO
+      QUARKUS_LOG_CATEGORY_AI_PIPESTREAM_REGISTRY_LEVEL: INFO
+      
+      # Hibernate/Flyway
+      QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY: none
+      QUARKUS_FLYWAY_MIGRATE_AT_START: "true"
+      QUARKUS_FLYWAY_REPAIR_AT_START: "true"
+      
+      # Metrics
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_ENABLED: "true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      apicurio-registry:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:38101/q/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: on-failure:3
+
+networks:
+  pipeline-test-network:
+    external: true
+

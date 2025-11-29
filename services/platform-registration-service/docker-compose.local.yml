@@ -1,0 +1,17 @@
+# Platform Registration Service - Local Registry Override
+# Use this override when testing images from local/rokkon registry
+#
+# Usage:
+#   REGISTRY=git.rokkon.com/io-pipeline SHA=abc1234 docker compose -f ../../docker-compose.yml -f docker-compose.yml -f docker-compose.local.yml up
+#
+# Or with branch-SHA format:
+#   REGISTRY=git.rokkon.com/io-pipeline BRANCH=main SHA=abc1234 docker compose -f ../../docker-compose.yml -f docker-compose.yml -f docker-compose.local.yml up
+
+services:
+  platform-registration-service:
+    # Primary: use SHA tag (matches GHCR strategy)
+    image: ${REGISTRY:-git.rokkon.com/io-pipeline}/platform-registration-service:${SHA:-latest}
+    
+    # Alternative: use branch-SHA format (uncomment to use)
+    # image: ${REGISTRY:-git.rokkon.com/io-pipeline}/platform-registration-service:${BRANCH:-main}-${SHA:-latest}
+

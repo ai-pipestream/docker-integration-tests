@@ -1,0 +1,17 @@
+# Platform Registration Service - Snapshot Override
+# Use this override when testing SNAPSHOT images from GHCR
+#
+# Usage:
+#   GITHUB_SHA=abc1234 docker compose -f ../docker-compose.yml -f docker-compose.yml -f docker-compose.snapshot.yml up
+#
+# Or set GITHUB_SHA environment variable:
+#   export GITHUB_SHA=abc1234
+#   docker compose -f ../docker-compose.yml -f docker-compose.yml -f docker-compose.snapshot.yml up
+
+services:
+  platform-registration-service:
+    image: ghcr.io/ai-pipestream/platform-registration-service:${GITHUB_SHA:-latest}
+    
+    # If you want to use the main-<sha> format instead:
+    # image: ghcr.io/ai-pipestream/platform-registration-service:main-${GITHUB_SHA:-latest}
+

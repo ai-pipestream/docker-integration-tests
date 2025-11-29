@@ -75,7 +75,7 @@ services:
   # Kafka in KRaft mode (proven configuration)
   kafka:
     container_name: pipeline-kafka
-    image: docker.io/apache/kafka:3.9.0
+    image: docker.io/apache/kafka:4.1.1
     hostname: kafka
     networks:
       - pipeline-test-network
