@@ -7,16 +7,16 @@ services:
     container_name: platform-registration-service
     image: ${PLATFORM_REGISTRATION_IMAGE:-ghcr.io/ai-pipestream/platform-registration-service:latest}
     networks:
-      - pipeline-test-network
+      - pipeline-integration-network
     ports:
-      - "38101:38101"  # HTTP and gRPC (shared port, gRPC uses same port as HTTP)
+      - "38201:38101"  # HTTP and gRPC (external:38201, internal:38101)
     environment:
       # ===================================================================
       # Infrastructure Connection (Docker Network Service Names)
       # ===================================================================
       # Consul Service Discovery
-      CONSUL_HOST: consul
-      CONSUL_PORT: 8500
+      PIPELINE_CONSUL_HOST: consul
+      PIPELINE_CONSUL_PORT: 8500
       PIPELINE_CONSUL_ENABLED: "true"
       
       # MySQL Database
@@ -31,7 +31,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS_PLAINTEXT: kafka:9092
       
       # Apicurio Registry (internal container-to-container URL)
-      APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v3
+      # Note: Base URL only - the client code appends /apis/registry/v3
+      APICURIO_REGISTRY_URL: http://apicurio-registry:8080
       
       # ===================================================================
       # HTTP and gRPC Configuration
@@ -50,7 +51,8 @@ services:
       SERVICE_REGISTRATION_SERVICE_NAME: platform-registration-service
       SERVICE_REGISTRATION_DESCRIPTION: Platform service registration and discovery service
       SERVICE_REGISTRATION_SERVICE_TYPE: APPLICATION
-      PLATFORM_REGISTRATION_HOST: platform-registration-service  # Container hostname
+      # Use container hostname for Consul gRPC health check (works within Docker network)
+      PLATFORM_REGISTRATION_HOST: platform-registration-service
       SERVICE_REGISTRATION_PORT: 38101
       SERVICE_REGISTRATION_CAPABILITIES: platform-registration,service-discovery
       SERVICE_REGISTRATION_TAGS: grpc,core-service,registration
@@ -79,14 +81,13 @@ services:
       consul:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:38101/q/health/ready || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:38101/platform-registration/q/health/ready || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 60s
     restart: on-failure:3
 
-networks:
-  pipeline-test-network:
-    external: true
+# Network is defined in base docker-compose.yml
+# When using standalone, create manually: docker network create pipeline-integration-network
 

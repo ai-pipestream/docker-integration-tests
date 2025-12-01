@@ -6,8 +6,8 @@
 set -e
 
 SERVICE_NAME="platform-registration-service"
-SERVICE_PORT=38101
-SERVICE_URL="http://localhost:${SERVICE_PORT}"
+SERVICE_PORT=${SERVICE_PORT:-38201}
+SERVICE_URL="http://localhost:${SERVICE_PORT}/platform-registration"
 
 # Colors for output
 RED='\033[0;31m'
