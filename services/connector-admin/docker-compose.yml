@@ -1,0 +1,97 @@
+# Connector Admin Service - Base Configuration
+# This service depends on platform-registration-service
+# The test script will include both services' compose files
+
+services:
+  connector-admin:
+    container_name: connector-admin
+    image: ${CONNECTOR_ADMIN_IMAGE:-ghcr.io/ai-pipestream/connector-admin:latest}
+    networks:
+      - pipeline-integration-network
+    ports:
+      - "38107:38107"  # HTTP and gRPC (external:38107, internal:38107)
+    environment:
+      # ===================================================================
+      # Infrastructure Connection (Docker Network Service Names)
+      # ===================================================================
+      # Consul Service Discovery
+      PIPELINE_CONSUL_HOST: consul
+      PIPELINE_CONSUL_PORT: 8500
+      PIPELINE_CONSUL_ENABLED: "true"
+      
+      # MySQL Database (connector-admin uses separate database)
+      QUARKUS_DATASOURCE_DB_KIND: mysql
+      QUARKUS_DATASOURCE_USERNAME: pipeline
+      QUARKUS_DATASOURCE_PASSWORD: password
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:mysql://mysql:3306/pipeline_connector_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&autoReconnect=true&connectTimeout=5000&socketTimeout=10000
+      QUARKUS_DATASOURCE_REACTIVE_URL: mysql://mysql:3306/pipeline_connector_dev
+      
+      # Kafka (using internal container-to-container listener)
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      
+      # Apicurio Registry (internal container-to-container URL)
+      APICURIO_REGISTRY_URL: http://apicurio-registry:8080
+      
+      # ===================================================================
+      # HTTP and gRPC Configuration
+      # ===================================================================
+      QUARKUS_HTTP_HOST: 0.0.0.0
+      QUARKUS_HTTP_PORT: 38107
+      QUARKUS_HTTP_ROOT_PATH: /connector
+      QUARKUS_GRPC_SERVER_USE_SEPARATE_SERVER: "false"
+      QUARKUS_GRPC_SERVER_ENABLE_REFLECTION_SERVICE: "true"
+      QUARKUS_GRPC_SERVER_ENABLE_HEALTH_SERVICE: "true"
+      QUARKUS_GRPC_SERVER_MAX_INBOUND_MESSAGE_SIZE: 2147483647
+      
+      # ===================================================================
+      # Service Registration Configuration
+      # ===================================================================
+      PIPESTREAM_REGISTRATION_ENABLED: "true"
+      PIPESTREAM_REGISTRATION_SERVICE_NAME: connector-admin
+      PIPESTREAM_REGISTRATION_DESCRIPTION: Connector registry and administration service
+      PIPESTREAM_REGISTRATION_TYPE: SERVICE
+      PIPESTREAM_REGISTRATION_ADVERTISED_HOST: ${CONNECTOR_SERVICE_HOST:host.docker.internal}
+      PIPESTREAM_REGISTRATION_ADVERTISED_PORT: 38107
+      PIPESTREAM_REGISTRATION_INTERNAL_HOST: ${DOCKER_BRIDGE_IP:172.17.0.1}
+      PIPESTREAM_REGISTRATION_INTERNAL_PORT: 38107
+      PIPESTREAM_REGISTRATION_CAPABILITIES: connector-management,api-key-management
+      PIPESTREAM_REGISTRATION_TAGS: connector,admin,core-service
+      
+      # Registration service connection (platform-registration-service)
+      PIPESTREAM_REGISTRATION_REGISTRATION_SERVICE_HOST: platform-registration-service
+      PIPESTREAM_REGISTRATION_REGISTRATION_SERVICE_PORT: 38101
+      
+      # ===================================================================
+      # Application Configuration
+      # ===================================================================
+      QUARKUS_APPLICATION_NAME: connector-admin
+      QUARKUS_LOG_LEVEL: INFO
+      
+      # Hibernate/Flyway
+      QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY: validate
+      QUARKUS_FLYWAY_MIGRATE_AT_START: "true"
+      QUARKUS_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      
+      # Metrics
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_ENABLED: "true"
+    depends_on:
+      platform-registration-service:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      apicurio-registry:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:38107/connector/q/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+    restart: on-failure:3
+
+# Network is defined in base docker-compose.yml
+# When using standalone, create manually: docker network create pipeline-integration-network

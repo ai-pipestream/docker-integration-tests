@@ -1,0 +1,13 @@
+# Connector Admin Service - Release Override
+# Use this override when testing RELEASE images from docker.io
+#
+# Usage:
+#   VERSION=1.0.0 docker compose -f ../../docker-compose.yml -f ../platform-registration-service/docker-compose.yml -f docker-compose.yml -f docker-compose.release.yml up
+#
+# Or set VERSION environment variable:
+#   export VERSION=1.0.0
+#   docker compose -f ../../docker-compose.yml -f ../platform-registration-service/docker-compose.yml -f docker-compose.yml -f docker-compose.release.yml up
+
+services:
+  connector-admin:
+    image: docker.io/pipestreamai/connector-admin:${VERSION:-latest}

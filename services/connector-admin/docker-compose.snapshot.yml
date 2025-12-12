@@ -1,0 +1,16 @@
+# Connector Admin Service - Snapshot Override
+# Use this override when testing SNAPSHOT images from GHCR
+#
+# Usage:
+#   GITHUB_SHA=abc1234 docker compose -f ../../docker-compose.yml -f ../platform-registration-service/docker-compose.yml -f docker-compose.yml -f docker-compose.snapshot.yml up
+#
+# Or set GITHUB_SHA environment variable:
+#   export GITHUB_SHA=abc1234
+#   docker compose -f ../../docker-compose.yml -f ../platform-registration-service/docker-compose.yml -f docker-compose.yml -f docker-compose.snapshot.yml up
+
+services:
+  connector-admin:
+    image: ghcr.io/ai-pipestream/connector-admin:${GITHUB_SHA:-latest}
+    
+    # If you want to use the main-<sha> format instead:
+    # image: ghcr.io/ai-pipestream/connector-admin:main-${GITHUB_SHA:-latest}
