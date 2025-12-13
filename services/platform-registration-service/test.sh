@@ -55,7 +55,7 @@ wait_for_service() {
         if [ $((attempt % 5)) -eq 0 ]; then
             echo -n " (${attempt}/${max_attempts})"
         else
-            echo -n "."
+        echo -n "."
         fi
         sleep 2
         attempt=$((attempt + 1))
