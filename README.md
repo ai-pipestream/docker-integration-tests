@@ -19,8 +19,8 @@ The following services are included in the deployment:
 | Kafka | `apache/kafka:4.1.1` | 9094 | Event streaming platform (KRaft mode) |
 | Apicurio Registry | `apicurio/apicurio-registry:3.0.13` | 8081 | Schema registry |
 | Apicurio Registry UI | `apicurio/apicurio-registry-ui:3.0.13` | 8888 | Schema registry web UI |
-| OpenSearch | `opensearchproject/opensearch:3.1.0` | 9200, 9600 | Search and analytics engine |
-| OpenSearch Dashboards | `opensearchproject/opensearch-dashboards:3.1.0` | 5601 | OpenSearch web UI |
+| OpenSearch | `opensearchproject/opensearch:3.4.0` | 9200, 9600 | Search and analytics engine |
+| OpenSearch Dashboards | `opensearchproject/opensearch-dashboards:3.4.0` | 5601 | OpenSearch web UI |
 | MinIO | `minio/minio:RELEASE.2024-11-07T00-52-20Z` | 9000, 9001 | S3-compatible object storage |
 | Kafka UI | `provectuslabs/kafka-ui:v0.7.2` | 8889 | Kafka management web UI |
 | Grafana LGTM | `grafana/otel-lgtm:0.11.9` | 3001, 5317, 5318 | Observability stack (Grafana + OTel + Prometheus + Tempo + Loki) |

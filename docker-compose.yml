@@ -145,7 +145,7 @@ services:
   # OpenSearch 3
   opensearch:
     container_name: it-opensearch
-    image: docker.io/opensearchproject/opensearch:3.1.0
+    image: docker.io/opensearchproject/opensearch:3.4.0
     networks:
       - pipeline-integration-network
     environment:
@@ -176,7 +176,7 @@ services:
   # OpenSearch Dashboards
   opensearch-dashboards:
     container_name: it-opensearch-dashboards
-    image: docker.io/opensearchproject/opensearch-dashboards:3.1.0
+    image: docker.io/opensearchproject/opensearch-dashboards:3.4.0
     networks:
       - pipeline-integration-network
     # No external ports - internal network only
